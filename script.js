@@ -96,10 +96,56 @@ document.addEventListener('DOMContentLoaded', () => {
   if (registrationForm) {
     const requestedPlan = new URLSearchParams(window.location.search).get('plan');
     const planSelect = document.querySelector('#member-plan');
+    const successPanel = document.querySelector('#registration-success');
+    const sheetStatus = document.querySelector('#registration-sheet-status');
+    const whatsAppLink = document.querySelector('#registration-whatsapp-link');
+    const sheetsWebhookUrl = window.IRON_MAN_REGISTRATION_CONFIG?.googleSheetsWebhookUrl?.trim();
     if (requestedPlan && [...planSelect.options].some((option) => option.value === requestedPlan)) planSelect.value = requestedPlan;
-    registrationForm.addEventListener('submit', (event) => {
+
+    registrationForm.addEventListener('submit', async (event) => {
       event.preventDefault();
-      document.querySelector('#registration-success').classList.add('show');
+      const registration = {
+        name: document.querySelector('#member-name').value.trim(),
+        phone: document.querySelector('#member-phone').value.trim(),
+        email: document.querySelector('#member-email').value.trim(),
+        plan: planSelect.options[planSelect.selectedIndex].text,
+        source: 'Iron Man Fitness Gym website'
+      };
+      const whatsAppMessage = [
+        'Hello Iron Man Fitness Gym,',
+        '',
+        'I would like to register for a membership.',
+        `Name: ${registration.name}`,
+        `Phone: ${registration.phone}`,
+        `Email: ${registration.email}`,
+        `Plan: ${registration.plan}`,
+        '',
+        'Please share the next steps. Thank you.'
+      ].join('\n');
+      const whatsAppUrl = `https://wa.me/916265219497?text=${encodeURIComponent(whatsAppMessage)}`;
+      whatsAppLink.href = whatsAppUrl;
+      window.open(whatsAppUrl, '_blank', 'noopener,noreferrer');
+
+      successPanel.classList.add('show');
+      sheetStatus.textContent = sheetsWebhookUrl
+        ? 'Saving your registration details…'
+        : 'WhatsApp enquiry prepared. Tap send in WhatsApp to complete your enquiry.';
+
+      if (sheetsWebhookUrl) {
+        try {
+          await fetch(sheetsWebhookUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            keepalive: true,
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(registration)
+          });
+          sheetStatus.textContent = 'Registration details saved. Tap send in WhatsApp to complete your enquiry.';
+        } catch (error) {
+          console.error('Unable to save registration to Google Sheets:', error);
+          sheetStatus.textContent = 'WhatsApp enquiry prepared. Tap send in WhatsApp to complete your enquiry.';
+        }
+      }
       registrationForm.reset();
     });
   }
