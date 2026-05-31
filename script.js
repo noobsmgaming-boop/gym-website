@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     billingSwitch.setAttribute('aria-label', `Switch to ${yearly ? 'monthly' : 'yearly'} pricing`);
     document.querySelectorAll('[data-billing-label]').forEach((label) => label.classList.toggle('active', label.dataset.billingLabel === (yearly ? 'yearly' : 'monthly')));
     document.querySelectorAll('.price strong[data-monthly]').forEach((price) => { price.textContent = yearly ? price.dataset.yearly : price.dataset.monthly; });
-    document.querySelectorAll('.annual-note').forEach((note) => { note.textContent = yearly ? 'Billed annually · 2 months free' : ''; });
+    document.querySelectorAll('.annual-note').forEach((note) => { note.textContent = yearly ? 'Ask us for current yearly pricing' : 'Ask us for current monthly pricing'; });
   });
 
   const registrationForm = document.querySelector('#registration-form');
